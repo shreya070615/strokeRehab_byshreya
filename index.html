@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stroke Rehab Therapy Hub</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #e0f7fa, #fce4ec);
+      color: #2c3e50;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    nav {
+      background: #34495e;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 10px;
+    }
+    nav button {
+      background: #1abc9c;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    nav button:hover {
+      background: #16a085;
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      animation: fadeIn 0.6s;
+    }
+    .active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    button {
+      margin-top: 10px;
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #2980b9; }
+    .quiz-option {
+      border: 1px solid #ccc;
+      margin: 8px;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .quiz-option:hover { background: #f9f9f9; }
+    canvas {
+      border: 2px solid #2c3e50;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    .therapy-controls {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧠 Stroke Rehabilitation Therapy Hub</h1>
+    <p>Cognitive • Motor • Music • Frequency Therapy</p>
+  </header>
+
+  <nav>
+    <button onclick="showSection('menu')">🏠 Home</button>
+    <button onclick="showSection('memory')">🃏 Memory</button>
+    <button onclick="showSection('quiz')">📚 Quiz</button>
+    <button onclick="showSection('speech')">🎤 Speech</button>
+    <button onclick="showSection('motor')">⚽ Motor</button>
+    <button onclick="showSection('music')">🎵 Music Therapy</button>
+  </nav>
+
+  <!-- Home -->
+  <div id="menu" class="container active">
+    <h2>Welcome!</h2>
+    <p>Select a therapy or game from the menu above. Each activity helps with memory, focus, speech, or motor skills.</p>
+  </div>
+
+  <!-- Memory Game -->
+  <div id="memory" class="container">
+    <h2>Memory Match Game</h2>
+    <p>Click to match the pairs</p>
+    <div id="memory-board"></div>
+    <button onclick="initMemory()">Restart</button>
+  </div>
+
+  <!-- Quiz -->
+  <div id="quiz" class="container">
+    <h2>Indian Culture & Bollywood Quiz</h2>
+    <p id="quiz-question"></p>
+    <div id="quiz-options"></div>
+    <p id="quiz-feedback"></p>
+  </div>
+
+  <!-- Speech -->
+  <div id="speech" class="container">
+    <h2>Speech Recognition Task</h2>
+    <p>Say: <b>"Namaste"</b></p>
+    <button onclick="startSpeech()">Start Listening</button>
+    <p id="speech-result"></p>
+  </div>
+
+  <!-- Motor -->
+  <div id="motor" class="container">
+    <h2>Motor Rehab: Catch the Ball</h2>
+    <canvas id="motor-canvas" width="400" height="400"></canvas>
+    <p id="motor-score">Score: 0</p>
+    <button onclick="stopMotor()">Stop</button>
+  </div>
+
+  <!-- Music Therapy -->
+  <div id="music" class="container">
+    <h2>🎶 Music & Frequency Therapy</h2>
+    <p>Relax, reduce stress, and improve focus.</p>
+    <div class="therapy-controls">
+      <button onclick="playMusic()">▶ Play Calming Music</button>
+      <button onclick="stopMusic()">⏹ Stop Music</button>
+    </div>
+    <div class="therapy-controls">
+      <button onclick="playFrequency(432)">432Hz Healing</button>
+      <button onclick="playFrequency(528)">528Hz DNA Repair</button>
+      <button onclick="stopFrequency()">Stop Frequency</button>
+    </div>
+    <p id="music-status"></p>
+  </div>
+
+  <script>
+    // Section switching
+    function showSection(id){
+      document.querySelectorAll('.container').forEach(c=>c.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if(id==="memory") initMemory();
+      if(id==="quiz") startQuiz();
+      if(id==="motor") startMotor();
+      if(id!=="motor") stopMotor();
+    }
+
+    // MEMORY GAME
+    const cards=["🍎","🍎","🍌","🍌","🍇","🍇","🥭","🥭"];
+    let flipped=[];
+    function initMemory(){
+      const board=document.getElementById("memory-board");
+      board.innerHTML="";
+      let shuffled=[...cards].sort(()=>0.5-Math.random());
+      shuffled.forEach(c=>{
+        let btn=document.createElement("button");
+        btn.textContent="?";
+        btn.style.fontSize="22px";
+        btn.onclick=()=>flipCard(btn,c);
+        board.appendChild(btn);
+      });
+      flipped=[];
+    }
+    function flipCard(btn,val){
+      if(flipped.length<2 && btn.textContent==="?"){
+        btn.textContent=val;
+        flipped.push({btn,val});
+        if(flipped.length===2){
+          if(flipped[0].val===flipped[1].val){ flipped=[]; }
+          else{
+            setTimeout(()=>{
+              flipped.forEach(c=>c.btn.textContent="?");
+              flipped=[];
+            },1000);
+          }
+        }
+      }
+    }
+
+    // QUIZ
+    const questions=[
+      {q:"What is the national fruit of India?",o:["Mango","Banana","Apple"],a:"Mango"},
+      {q:"Who is called King of Bollywood?",o:["Shah Rukh Khan","Amitabh Bachchan","Aamir Khan"],a:"Shah Rukh Khan"},
+    ];
+    let currentQ=0;
+    function startQuiz(){
+      currentQ=0; showQuestion();
+    }
+    function showQuestion(){
+      const q=questions[currentQ];
+      document.getElementById("quiz-question").textContent=q.q;
+      const optDiv=document.getElementById("quiz-options");
+      optDiv.innerHTML="";
+      q.o.forEach(opt=>{
+        let div=document.createElement("div");
+        div.className="quiz-option";
+        div.textContent=opt;
+        div.onclick=()=>checkAnswer(opt,q.a);
+        optDiv.appendChild(div);
+      });
+      document.getElementById("quiz-feedback").textContent="";
+    }
+    function checkAnswer(sel,correct){
+      document.getElementById("quiz-feedback").textContent=(sel===correct?"✅ Correct!":"❌ Wrong!");
+      if(currentQ<questions.length-1){ currentQ++; setTimeout(showQuestion,1000); }
+    }
+
+    // SPEECH
+    function startSpeech(){
+      if(!('webkitSpeechRecognition' in window)){
+        document.getElementById("speech-result").textContent="Not supported";
+        return;
+      }
+      let rec=new webkitSpeechRecognition();
+      rec.lang="en-IN";
+      rec.onresult=(e)=>{
+        let txt=e.results[0][0].transcript;
+        document.getElementById("speech-result").textContent="You said: "+txt;
+        if(txt.toLowerCase().includes("namaste")) document.getElementById("speech-result").textContent+=" ✅ Correct!";
+      };
+      rec.start();
+    }
+
+    // MOTOR
+    let motorCtx,ball,paddle,motorInterval,score=0;
+    function startMotor(){
+      const canvas=document.getElementById("motor-canvas");
+      motorCtx=canvas.getContext("2d");
+      ball={x:200,y:0,r:10,dy:2};
+      paddle={x:150,y:380,w:100,h:10};
+      score=0;
+      document.addEventListener("mousemove",movePaddle);
+      motorInterval=setInterval(updateMotor,20);
+    }
+    function stopMotor(){
+      clearInterval(motorInterval);
+      document.removeEventListener("mousemove",movePaddle);
+    }
+    function movePaddle(e){
+      const rect=document.getElementById("motor-canvas").getBoundingClientRect();
+      paddle.x=e.clientX-rect.left-50;
+    }
+    function updateMotor(){
+      motorCtx.clearRect(0,0,400,400);
+      motorCtx.fillStyle="red"; motorCtx.beginPath(); motorCtx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); motorCtx.fill();
+      motorCtx.fillStyle="blue"; motorCtx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+      ball.y+=ball.dy;
+      if(ball.y>370 && ball.x>paddle.x && ball.x<paddle.x+paddle.w){
+        score++; ball.y=0; ball.x=Math.random()*380+10;
+        document.getElementById("motor-score").textContent="Score: "+score;
+      }
+      if(ball.y>400){ ball.y=0; ball.x=Math.random()*380+10; }
+    }
+
+    // MUSIC THERAPY
+    let audio=new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+    audio.loop=true;
+    function playMusic(){
+      audio.play();
+      document.getElementById("music-status").textContent="🎶 Playing calming music...";
+    }
+    function stopMusic(){
+      audio.pause(); audio.currentTime=0;
+      document.getElementById("music-status").textContent="Music stopped.";
+    }
+
+    // FREQUENCY THERAPY
+    let freqCtx,freqOsc;
+    function playFrequency(hz){
+      stopFrequency();
+      freqCtx=new (window.AudioContext||window.webkitAudioContext)();
+      freqOsc=freqCtx.createOscillator();
+      freqOsc.type="sine";
+      freqOsc.frequency.setValueAtTime(hz,freqCtx.currentTime);
+      freqOsc.connect(freqCtx.destination);
+      freqOsc.start();
+      document.getElementById("music-status").textContent=`🔊 Playing ${hz}Hz Frequency`;
+    }
+    function stopFrequency(){
+      if(freqOsc){ freqOsc.stop(); freqOsc.disconnect(); }
+      document.getElementById("music-status").textContent="Frequency stopped.";
+    }
+  </script>
+</body>
+</html>
